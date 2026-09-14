@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: voice
+      POSTGRES_USER: voice
+      POSTGRES_PASSWORD: voice
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  ml-inference:
+    build:
+      context: ../../services/ml-inference
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_DEVICE: cpu
