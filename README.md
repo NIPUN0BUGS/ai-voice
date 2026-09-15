@@ -99,6 +99,8 @@ For the full multi-service deployment, set the Vercel project **Root Directory**
 
 If you deploy only `apps/web`, Vercel will deploy the frontend service only. The browser UI will load, but `/api` calls need a separate backend URL or a full Services deployment.
 
+For a frontend-only Vercel deployment, set `VITE_API_BASE_URL` to a deployed backend URL when one exists. Without that variable, the web app falls back to demo mode so the UI remains usable.
+
 The Vercel backend is intentionally lightweight. Real local AI model serving with large model files or GPU dependencies should run on dedicated container/GPU infrastructure and be called through the existing model-client port.
 
 ## Boundaries

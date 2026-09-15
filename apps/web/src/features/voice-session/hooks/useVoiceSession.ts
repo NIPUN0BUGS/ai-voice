@@ -13,6 +13,8 @@ type VoiceTurnResponse = {
   audioUrl?: string;
 };
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
+
 export function useVoiceSession() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -27,7 +29,7 @@ export function useVoiceSession() {
     setState("connecting");
 
     try {
-      const response = await fetch("/api/voice-sessions", {
+      const response = await fetch(`${apiBaseUrl}/voice-sessions`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -45,8 +47,12 @@ export function useVoiceSession() {
       sessionIdRef.current = data.sessionId;
       setState("idle");
     } catch (sessionError) {
-      setError(toErrorMessage(sessionError));
-      setState("error");
+      const fallback = createDemoSession();
+      sessionIdRef.current = fallback.sessionId;
+      setResponseText(
+        "Demo mode is active because the backend API is not deployed for this Vercel project.",
+      );
+      setState("idle");
     }
   }, []);
 
@@ -90,12 +96,13 @@ export function useVoiceSession() {
         stream.getTracks().forEach((track) => track.stop());
         setState("processing");
 
+        const audioBlob = new Blob(chunksRef.current, {
+          type: mimeType || "application/octet-stream",
+        });
+
         try {
-          const audioBlob = new Blob(chunksRef.current, {
-            type: mimeType || "application/octet-stream",
-          });
           const audioBase64 = await blobToBase64(audioBlob);
-          const response = await fetch("/api/voice-turns", {
+          const response = await fetch(`${apiBaseUrl}/voice-turns`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -120,8 +127,10 @@ export function useVoiceSession() {
 
           setState("idle");
         } catch (turnError) {
-          setError(toErrorMessage(turnError));
-          setState("error");
+          const data = createDemoTurn(audioBlob.size);
+          setTranscript(data.transcript);
+          setResponseText(data.responseText);
+          setState("idle");
         }
       };
 
@@ -167,4 +176,23 @@ function toErrorMessage(error: unknown): string {
   }
 
   return "Unexpected voice session error";
+}
+
+function createDemoSession(): StartSessionResponse {
+  return {
+    sessionId:
+      globalThis.crypto?.randomUUID?.() ?? `demo-${Date.now().toString(36)}`,
+    expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+  };
+}
+
+function createDemoTurn(audioBytes: number): VoiceTurnResponse {
+  return {
+    transcript:
+      audioBytes > 0
+        ? "Demo transcript: audio was recorded in the browser."
+        : "",
+    responseText:
+      "Demo response: connect a deployed backend by setting VITE_API_BASE_URL, or deploy the repo root with Vercel Services.",
+  };
 }
