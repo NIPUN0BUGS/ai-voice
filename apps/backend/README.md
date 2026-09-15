@@ -31,9 +31,29 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 Recommended hosting for this backend:
 
+- Railway for no-credit-card trial deploys
 - Render for the quickest managed deploy
-- Railway for simple app + database deploys
 - Fly.io or VPS/Docker when you need more control
 - GPU/container host later when real local AI models are added
 
 Vercel can host the frontend. Keep model inference outside Vercel once heavy model files or GPU dependencies are needed.
+
+## Railway
+
+Use these settings:
+
+```text
+Root Directory: apps/backend
+Builder: Dockerfile
+Health Check Path: /api/health
+```
+
+Environment variables:
+
+```text
+FRONTEND_ORIGIN=https://your-vercel-frontend-url.vercel.app
+ASR_PROVIDER=mock
+AUDIO_STORAGE_PATH=/tmp/voice-audio
+```
+
+Start with `ASR_PROVIDER=mock` on free/trial hosting. Switch to `faster-whisper` only after the backend deploy is stable.
