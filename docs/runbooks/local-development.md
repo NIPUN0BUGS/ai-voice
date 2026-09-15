@@ -16,7 +16,7 @@ npm install
 Terminal 1:
 
 ```powershell
-cd services\ml-inference
+cd apps\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -38,7 +38,7 @@ npm run dev:web
 Smoke test:
 
 ```powershell
-.\scripts\smoke-test-api.ps1
+.\scripts\smoke-test-backend.ps1
 ```
 
 ## Debugging Checklist
