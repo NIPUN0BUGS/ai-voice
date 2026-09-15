@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from src.common.audio import write_tone_wav
 from src.common.schemas import TextToSpeechRequest
@@ -6,7 +7,9 @@ from src.common.schemas import TextToSpeechRequest
 
 class TextToSpeechService:
     def __init__(self, audio_dir: Path | None = None):
-        self.audio_dir = audio_dir or Path("storage/audio")
+        self.audio_dir = audio_dir or Path(
+            os.getenv("AUDIO_STORAGE_PATH", "/tmp/voice-audio")
+        )
 
     def synthesize(self, request: TextToSpeechRequest) -> dict:
         output_path = self.audio_dir / f"{request.session_id}.wav"

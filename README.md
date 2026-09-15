@@ -88,6 +88,15 @@ Open:
 http://localhost:5173
 ```
 
+## Deploy To Vercel
+
+This repo includes a root `vercel.json` for Vercel Services:
+
+- `apps/web` deploys as the Vite frontend
+- `services/ml-inference` deploys under `/api` as the lightweight FastAPI backend
+
+The Vercel backend is intentionally lightweight. Real local AI model serving with large model files or GPU dependencies should run on dedicated container/GPU infrastructure and be called through the existing model-client port.
+
 ## Boundaries
 
 - Controllers are thin and only validate/translate transport input.
