@@ -53,12 +53,14 @@ app.add_middleware(
 
 audio_dir = Path(os.getenv("AUDIO_STORAGE_PATH", "/tmp/voice-audio"))
 app.mount("/api/audio", StaticFiles(directory=audio_dir, check_dir=False), name="audio")
+app.mount("/audio", StaticFiles(directory=audio_dir, check_dir=False), name="audio-root")
 
 sessions: dict[str, datetime] = {}
 asr_model = None
 
 
 @app.get("/")
+@app.get("/index")
 @app.get("/api")
 @app.get("/api/index")
 def root():
@@ -69,11 +71,13 @@ def root():
     }
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "voice-ai-backend"}
 
 
+@app.post("/voice-sessions")
 @app.post("/api/voice-sessions")
 def start_voice_session(request: StartVoiceSessionRequest):
     if not request.consent_accepted:
@@ -89,6 +93,7 @@ def start_voice_session(request: StartVoiceSessionRequest):
     }
 
 
+@app.post("/voice-turns")
 @app.post("/api/voice-turns")
 def process_voice_turn(request: VoiceTurnRequest):
     expires_at = sessions.get(request.session_id)
@@ -121,12 +126,14 @@ def process_voice_turn(request: VoiceTurnRequest):
     }
 
 
+@app.post("/vad")
 @app.post("/api/vad")
 def detect_voice_activity(request: AudioRequest):
     audio = decode_audio_base64(request.audio_base64)
     return {"has_speech": has_speech(audio, request.audio_format)}
 
 
+@app.post("/asr")
 @app.post("/api/asr")
 def transcribe(request: AudioRequest):
     audio = decode_audio_base64(request.audio_base64)
@@ -134,6 +141,7 @@ def transcribe(request: AudioRequest):
     return {"transcript": transcript, "confidence": 0.9 if transcript else 0, "language": "en"}
 
 
+@app.post("/tts")
 @app.post("/api/tts")
 def synthesize(request: TextToSpeechRequest):
     audio_url = synthesize_audio(request.session_id)
