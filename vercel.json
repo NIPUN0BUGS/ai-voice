@@ -5,11 +5,32 @@
       "root": "apps/web",
       "framework": "vite",
       "buildCommand": "npm run build",
-      "outputDirectory": "dist"
+      "outputDirectory": "dist",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     },
     "ml-inference": {
       "root": "services/ml-inference",
-      "framework": "fastapi"
+      "framework": "fastapi",
+      "entrypoint": "src.main:app"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "ml-inference"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ]
 }
