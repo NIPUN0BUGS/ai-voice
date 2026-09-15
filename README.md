@@ -61,10 +61,17 @@ Install Node.js 22+ and Python 3.12+, then run:
 npm install
 ```
 
+Copy env templates:
+
+```powershell
+Copy-Item apps\backend\.env.example apps\backend\.env -ErrorAction SilentlyContinue
+Copy-Item apps\web\.env.example apps\web\.env.local -ErrorAction SilentlyContinue
+```
+
 Terminal 1:
 
 ```powershell
-cd services\ml-inference
+cd apps\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -72,12 +79,6 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Terminal 2:
-
-```powershell
-npm run dev:api
-```
-
-Terminal 3:
 
 ```powershell
 npm run dev:web

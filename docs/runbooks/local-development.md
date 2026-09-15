@@ -2,10 +2,9 @@
 
 ## Startup Order
 
-1. Start infrastructure dependencies.
-2. Start `services/ml-inference`.
-3. Start `apps/api-node`.
-4. Start `apps/web`.
+1. Start `apps/backend`.
+2. Start `apps/web`.
+3. Use `apps/api-node` later when you need the Node orchestration/WebSocket layer.
 
 ## Commands
 
@@ -13,10 +12,13 @@
 npm install
 ```
 
+`.env.example` files are templates. Copy them to real `.env` files before running services.
+
 Terminal 1:
 
 ```powershell
 cd apps\backend
+Copy-Item .env.example .env -ErrorAction SilentlyContinue
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -26,14 +28,19 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 Terminal 2:
 
 ```powershell
-npm run dev:api
-```
-
-Terminal 3:
-
-```powershell
+cd apps\web
+Copy-Item .env.example .env.local -ErrorAction SilentlyContinue
+cd ..\..
 npm run dev:web
 ```
+
+Open `http://localhost:5173`.
+
+Expected result:
+
+- Status shows `backend connected` after starting a session.
+- Demo mode disappears.
+- Recorded audio is sent to `http://localhost:8000/api`.
 
 Smoke test:
 
