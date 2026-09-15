@@ -15,7 +15,7 @@ type VoiceTurnResponse = {
 
 type ConnectionStatus = "unknown" | "connected" | "demo";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const apiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 export function useVoiceSession() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -37,7 +37,7 @@ export function useVoiceSession() {
     setState("connecting");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/voice-sessions`, {
+      const data = await requestJson<StartSessionResponse>("/voice-sessions", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -46,12 +46,6 @@ export function useVoiceSession() {
           consentAccepted: true,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      const data = (await response.json()) as StartSessionResponse;
       sessionIdRef.current = data.sessionId;
       setIsDemoMode(false);
       setConnectionStatus("connected");
@@ -66,9 +60,7 @@ export function useVoiceSession() {
         "Backend not connected. The browser can record audio, but real transcription needs the FastAPI backend.",
       );
       setTranscript("Waiting for a connected backend to transcribe your words.");
-      setResponseText(
-        "Deploy apps/backend and set VITE_API_BASE_URL in Vercel to enable real speech-to-text.",
-      );
+      setResponseText(getBackendFallbackMessage(sessionError));
       setState("idle");
     }
   }, []);
@@ -119,7 +111,7 @@ export function useVoiceSession() {
 
         try {
           const audioBase64 = await blobToBase64(audioBlob);
-          const response = await fetch(`${apiBaseUrl}/voice-turns`, {
+          const data = await requestJson<VoiceTurnResponse>("/voice-turns", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -129,12 +121,6 @@ export function useVoiceSession() {
               audioBase64,
             }),
           });
-
-          if (!response.ok) {
-            throw new Error(await response.text());
-          }
-
-          const data = (await response.json()) as VoiceTurnResponse;
           setTranscript(data.transcript);
           setResponseText(data.responseText);
           setIsDemoMode(false);
@@ -184,6 +170,41 @@ export function useVoiceSession() {
     recordTurn,
     stopRecording,
   };
+}
+
+function normalizeApiBaseUrl(value: string | undefined): string {
+  return (value?.trim() || "/api").replace(/\/+$/, "");
+}
+
+async function requestJson<TResponse>(
+  path: string,
+  init: RequestInit,
+): Promise<TResponse> {
+  const response = await fetch(`${apiBaseUrl}${path}`, init);
+  const contentType = response.headers.get("content-type") ?? "";
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(body || `Backend request failed with ${response.status}`);
+  }
+
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      "Backend did not return JSON. Check that VITE_API_BASE_URL points to the public FastAPI backend, not a protected Vercel page.",
+    );
+  }
+
+  return JSON.parse(body) as TResponse;
+}
+
+function getBackendFallbackMessage(error: unknown): string {
+  const message = toErrorMessage(error);
+
+  if (message.includes("did not return JSON")) {
+    return message;
+  }
+
+  return "Deploy apps/backend and set VITE_API_BASE_URL in Vercel to enable real speech-to-text.";
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
