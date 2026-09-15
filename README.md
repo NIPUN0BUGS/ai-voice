@@ -95,6 +95,10 @@ This repo includes a root `vercel.json` for Vercel Services:
 - `apps/web` deploys as the Vite frontend
 - `services/ml-inference` deploys under `/api` as the lightweight FastAPI backend
 
+For the full multi-service deployment, set the Vercel project **Root Directory** to the repository root, not `apps/web`.
+
+If you deploy only `apps/web`, Vercel will deploy the frontend service only. The browser UI will load, but `/api` calls need a separate backend URL or a full Services deployment.
+
 The Vercel backend is intentionally lightweight. Real local AI model serving with large model files or GPU dependencies should run on dedicated container/GPU infrastructure and be called through the existing model-client port.
 
 ## Boundaries
