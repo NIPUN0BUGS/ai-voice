@@ -42,6 +42,16 @@ Browser microphone
 
 The current starter uses HTTP for the first vertical slice. WebSocket streaming can be added after the model path is stable.
 
+## Current Capabilities
+
+- Browser recording through `MediaRecorder`
+- Session creation with consent validation
+- Node.js use-case orchestration with repository and model ports
+- In-memory session repository for local development
+- Python VAD payload validation and basic PCM energy detection
+- Python ASR adapter boundary ready for a local model
+- Python TTS placeholder that writes a local WAV response file
+
 ## Run Locally
 
 Install Node.js 22+ and Python 3.12+, then run:

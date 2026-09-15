@@ -1,12 +1,12 @@
 import type {
   SpeechRecognitionPort,
   SpeechRecognitionResult,
-} from "../../application/ports/outbound/speech-recognition.port";
+} from "../../application/ports/outbound/speech-recognition.port.js";
 import type {
   TextToSpeechPort,
   SpeechSynthesisResult,
-} from "../../application/ports/outbound/text-to-speech.port";
-import type { VoiceActivityPort } from "../../application/ports/outbound/voice-activity.port";
+} from "../../application/ports/outbound/text-to-speech.port.js";
+import type { VoiceActivityPort } from "../../application/ports/outbound/voice-activity.port.js";
 
 export class LocalMlInferenceClient
   implements SpeechRecognitionPort, TextToSpeechPort, VoiceActivityPort
@@ -15,12 +15,13 @@ export class LocalMlInferenceClient
 
   async hasSpeech(input: {
     audio: Buffer;
+    audioFormat: string;
     sampleRateHz: number;
   }): Promise<boolean> {
     const response = await this.post<{ has_speech: boolean }>("/vad", {
       audio_base64: input.audio.toString("base64"),
       sample_rate_hz: input.sampleRateHz,
-      audio_format: "pcm16",
+      audio_format: input.audioFormat,
     });
 
     return response.has_speech;

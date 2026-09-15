@@ -1,1 +1,1 @@
-export * from "./voice-session";
+export * from "./voice-session.js";

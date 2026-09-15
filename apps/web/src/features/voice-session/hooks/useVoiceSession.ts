@@ -57,56 +57,80 @@ export function useVoiceSession() {
       await startSession();
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-    chunksRef.current = [];
-    mediaRecorderRef.current = recorder;
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Microphone recording is not supported in this browser");
       }
-    };
 
-    recorder.onstop = async () => {
-      stream.getTracks().forEach((track) => track.stop());
-      setState("processing");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "";
+      const recorder = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType } : undefined,
+      );
 
-      try {
-        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const audioBase64 = await blobToBase64(audioBlob);
-        const response = await fetch("/api/voice-turns", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            sessionId: sessionIdRef.current,
-            audioFormat: "webm",
-            sampleRateHz: 48000,
-            audioBase64,
-          }),
-        });
+      chunksRef.current = [];
+      mediaRecorderRef.current = recorder;
 
-        if (!response.ok) {
-          throw new Error(await response.text());
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
         }
+      };
 
-        const data = (await response.json()) as VoiceTurnResponse;
-        setTranscript(data.transcript);
-        setResponseText(data.responseText);
-
-        if (data.audioUrl) {
-          new Audio(data.audioUrl).play().catch(() => undefined);
-        }
-
-        setState("idle");
-      } catch (turnError) {
-        setError(toErrorMessage(turnError));
+      recorder.onerror = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setError("Recording failed");
         setState("error");
-      }
-    };
+      };
 
-    recorder.start();
-    setState("recording");
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setState("processing");
+
+        try {
+          const audioBlob = new Blob(chunksRef.current, {
+            type: mimeType || "application/octet-stream",
+          });
+          const audioBase64 = await blobToBase64(audioBlob);
+          const response = await fetch("/api/voice-turns", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              sessionId: sessionIdRef.current,
+              audioFormat: mimeType.includes("webm") ? "webm" : "pcm16",
+              sampleRateHz: 48000,
+              audioBase64,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const data = (await response.json()) as VoiceTurnResponse;
+          setTranscript(data.transcript);
+          setResponseText(data.responseText);
+
+          if (data.audioUrl) {
+            new Audio(data.audioUrl).play().catch(() => undefined);
+          }
+
+          setState("idle");
+        } catch (turnError) {
+          setError(toErrorMessage(turnError));
+          setState("error");
+        }
+      };
+
+      recorder.start();
+      setState("recording");
+    } catch (recordingError) {
+      setError(toErrorMessage(recordingError));
+      setState("error");
+    }
   }, [startSession]);
 
   const stopRecording = useCallback(() => {

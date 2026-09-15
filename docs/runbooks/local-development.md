@@ -7,6 +7,40 @@
 3. Start `apps/api-node`.
 4. Start `apps/web`.
 
+## Commands
+
+```powershell
+npm install
+```
+
+Terminal 1:
+
+```powershell
+cd services\ml-inference
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Terminal 2:
+
+```powershell
+npm run dev:api
+```
+
+Terminal 3:
+
+```powershell
+npm run dev:web
+```
+
+Smoke test:
+
+```powershell
+.\scripts\smoke-test-api.ps1
+```
+
 ## Debugging Checklist
 
 - Confirm microphone permission in the browser.

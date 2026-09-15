@@ -1,5 +1,5 @@
-import type { ProcessVoiceTurnUseCase } from "../../../application/use-cases/process-voice-turn.use-case";
-import type { ProcessVoiceTurnInput } from "../../../application/dto/voice-session.dto";
+import type { ProcessVoiceTurnUseCase } from "../../../application/use-cases/process-voice-turn.use-case.js";
+import type { ProcessVoiceTurnInput } from "../../../application/dto/voice-session.dto.js";
 
 export class VoiceSessionController {
   constructor(private readonly processVoiceTurn: ProcessVoiceTurnUseCase) {}
