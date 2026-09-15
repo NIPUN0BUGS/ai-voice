@@ -111,14 +111,14 @@ Recommended setup:
 
 ```text
 Frontend: Vercel project rooted at apps/web
-Backend: Railway/Render/Fly/VPS project rooted at apps/backend
+Backend: Vercel/Railway/Render/Fly/VPS project rooted at apps/backend
 Frontend env: VITE_API_BASE_URL=https://your-backend-domain/api
 Backend env: FRONTEND_ORIGIN=https://your-frontend-domain
 Backend env: ASR_PROVIDER=faster-whisper
 Backend env: ASR_MODEL_SIZE=tiny
 ```
 
-If a host asks for a credit card, use Railway as the next easiest option. Railway supports GitHub deploys and no-credit-card trial deployment, but usage is limited by trial credit.
+If a host asks for a credit card, deploy the lightweight backend on Vercel with `ASR_PROVIDER=mock`, or use Railway as the next easiest option. Railway supports GitHub deploys and no-credit-card trial deployment, but usage is limited by trial credit.
 
 This keeps the UI fast on Vercel and leaves the backend free to move to Docker/GPU infrastructure when real local ASR/TTS models are added.
 

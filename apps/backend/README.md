@@ -31,12 +31,35 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 Recommended hosting for this backend:
 
+- Vercel for the quickest no-card lightweight API deploy
 - Railway for no-credit-card trial deploys
 - Render for the quickest managed deploy
 - Fly.io or VPS/Docker when you need more control
 - GPU/container host later when real local AI models are added
 
 Vercel can host the frontend. Keep model inference outside Vercel once heavy model files or GPU dependencies are needed.
+
+## Vercel
+
+Use these settings for a separate backend project:
+
+```text
+Root Directory: apps/backend
+Framework Preset: Other
+Build Command: leave empty
+Output Directory: leave empty
+Install Command: pip install -r requirements.txt
+```
+
+Environment variables:
+
+```text
+FRONTEND_ORIGIN=https://your-vercel-frontend-url.vercel.app
+ASR_PROVIDER=mock
+AUDIO_STORAGE_PATH=/tmp/voice-audio
+```
+
+This deploys the backend contract, but not real Whisper transcription. For real local Whisper, deploy with `requirements-asr.txt` on a container host that has enough CPU/RAM.
 
 ## Railway
 
