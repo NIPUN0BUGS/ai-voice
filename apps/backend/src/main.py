@@ -59,8 +59,13 @@ asr_model = None
 
 
 @app.get("/")
+@app.get("/api")
 def root():
-    return {"service": "voice-ai-backend", "docs": "/docs", "health": "/api/health"}
+    return {
+        "service": "voice-ai-backend",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
 
 
 @app.get("/api/health")
