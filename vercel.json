@@ -9,8 +9,7 @@
     },
     "ml-inference": {
       "root": "services/ml-inference",
-      "framework": "fastapi",
-      "path": "/api"
+      "framework": "fastapi"
     }
   }
 }
