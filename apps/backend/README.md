@@ -61,6 +61,14 @@ AUDIO_STORAGE_PATH=/tmp/voice-audio
 
 This deploys the backend contract, but not real Whisper transcription. For real local Whisper, deploy with `requirements-asr.txt` on a container host that has enough CPU/RAM.
 
+After deploy, test:
+
+```text
+https://your-backend-vercel-url.vercel.app/api/health
+```
+
+The backend includes `api/index.py` and `api/[...path].py` so Vercel routes `/api/health`, `/api/voice-sessions`, and `/api/voice-turns` into the same FastAPI app.
+
 ## Railway
 
 Use these settings:
