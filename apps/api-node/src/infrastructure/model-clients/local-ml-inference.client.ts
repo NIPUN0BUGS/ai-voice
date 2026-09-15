@@ -13,24 +13,75 @@ export class LocalMlInferenceClient
 {
   constructor(private readonly baseUrl: string) {}
 
-  async hasSpeech(): Promise<boolean> {
-    // Replace with POST /vad when the Python service is implemented.
-    return true;
+  async hasSpeech(input: {
+    audio: Buffer;
+    sampleRateHz: number;
+  }): Promise<boolean> {
+    const response = await this.post<{ has_speech: boolean }>("/vad", {
+      audio_base64: input.audio.toString("base64"),
+      sample_rate_hz: input.sampleRateHz,
+      audio_format: "pcm16",
+    });
+
+    return response.has_speech;
   }
 
-  async transcribe(): Promise<SpeechRecognitionResult> {
-    // Replace with POST /asr when the Python service is implemented.
+  async transcribe(input: {
+    audio: Buffer;
+    audioFormat: string;
+    sampleRateHz: number;
+  }): Promise<SpeechRecognitionResult> {
+    const response = await this.post<{
+      transcript: string;
+      confidence: number;
+      language?: string;
+    }>("/asr", {
+      audio_base64: input.audio.toString("base64"),
+      sample_rate_hz: input.sampleRateHz,
+      audio_format: input.audioFormat,
+    });
+
     return {
-      transcript: "hello",
-      confidence: 0.9,
-      language: "en",
+      transcript: response.transcript,
+      confidence: response.confidence,
+      language: response.language,
     };
   }
 
-  async synthesize(input: { sessionId: string }): Promise<SpeechSynthesisResult> {
-    // Replace with POST /tts when the Python service is implemented.
+  async synthesize(input: {
+    sessionId: string;
+    text: string;
+    voiceId?: string;
+  }): Promise<SpeechSynthesisResult> {
+    const response = await this.post<{
+      audio_url: string;
+      duration_ms?: number;
+    }>("/tts", {
+      session_id: input.sessionId,
+      text: input.text,
+      voice_id: input.voiceId,
+    });
+
     return {
-      audioUrl: `${this.baseUrl}/audio/${input.sessionId}.wav`,
+      audioUrl: `${this.baseUrl}${response.audio_url}`,
+      durationMs: response.duration_ms,
     };
+  }
+
+  private async post<T>(path: string, body: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`ML inference request failed: ${response.status} ${errorBody}`);
+    }
+
+    return (await response.json()) as T;
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "voice-ai-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @voice/web",
+    "dev:api": "npm run dev -w @voice/api-node",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

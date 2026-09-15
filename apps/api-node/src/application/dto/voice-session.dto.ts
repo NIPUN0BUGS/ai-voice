@@ -3,7 +3,7 @@ import type {
   StartVoiceSessionResponse,
   VoiceTurnRequest,
   VoiceTurnResponse,
-} from "../../../../../packages/contracts/src/voice-session";
+} from "@voice/contracts";
 
 export type StartVoiceSessionInput = StartVoiceSessionRequest;
 export type StartVoiceSessionOutput = StartVoiceSessionResponse;

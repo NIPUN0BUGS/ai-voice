@@ -1,38 +1,31 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+
+from src.asr.service import SpeechRecognitionService
+from src.common.schemas import AudioRequest, TextToSpeechRequest
+from src.tts.service import TextToSpeechService
+from src.vad.service import VoiceActivityService
 
 app = FastAPI(title="Local Voice AI Inference")
 
-
-class AudioRequest(BaseModel):
-    audio_base64: str = Field(min_length=1)
-    sample_rate_hz: int = Field(ge=8000, le=48000)
-    audio_format: str
-
-
-class TextToSpeechRequest(BaseModel):
-    session_id: str = Field(min_length=1)
-    text: str = Field(min_length=1, max_length=4000)
-    voice_id: str | None = None
+vad_service = VoiceActivityService()
+asr_service = SpeechRecognitionService()
+tts_service = TextToSpeechService()
 
 
 @app.post("/vad")
 def detect_voice_activity(request: AudioRequest):
     if not request.audio_base64.strip():
         raise HTTPException(status_code=400, detail="audio_base64 is required")
-    return {"has_speech": True}
+    return {"has_speech": vad_service.detect(request)}
 
 
 @app.post("/asr")
 def transcribe(request: AudioRequest):
     if not request.audio_base64.strip():
         raise HTTPException(status_code=400, detail="audio_base64 is required")
-    return {"transcript": "hello", "confidence": 0.9, "language": "en"}
+    return asr_service.transcribe(request)
 
 
 @app.post("/tts")
 def synthesize(request: TextToSpeechRequest):
-    return {
-        "audio_url": f"/audio/{request.session_id}.wav",
-        "duration_ms": 1000,
-    }
+    return tts_service.synthesize(request)

@@ -40,6 +40,44 @@ Browser microphone
   -> Browser playback
 ```
 
+The current starter uses HTTP for the first vertical slice. WebSocket streaming can be added after the model path is stable.
+
+## Run Locally
+
+Install Node.js 22+ and Python 3.12+, then run:
+
+```powershell
+npm install
+```
+
+Terminal 1:
+
+```powershell
+cd services\ml-inference
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Terminal 2:
+
+```powershell
+npm run dev:api
+```
+
+Terminal 3:
+
+```powershell
+npm run dev:web
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
 ## Boundaries
 
 - Controllers are thin and only validate/translate transport input.
