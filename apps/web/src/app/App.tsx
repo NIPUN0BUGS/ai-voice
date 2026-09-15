@@ -8,6 +8,8 @@ export function App() {
     transcript,
     responseText,
     isDemoMode,
+    connectionStatus,
+    notice,
     startSession,
     recordTurn,
     stopRecording,
@@ -27,7 +29,12 @@ export function App() {
           <span className={`status-dot status-${state}`} />
           <span>{state}</span>
           {isDemoMode ? <span className="mode-pill">demo</span> : null}
+          {connectionStatus === "connected" ? (
+            <span className="mode-pill connected">backend connected</span>
+          ) : null}
         </div>
+
+        <p className={isDemoMode ? "notice warning" : "notice"}>{notice}</p>
 
         <div className="actions">
           <button type="button" onClick={startSession}>

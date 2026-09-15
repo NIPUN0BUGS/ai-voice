@@ -13,6 +13,8 @@ type VoiceTurnResponse = {
   audioUrl?: string;
 };
 
+type ConnectionStatus = "unknown" | "connected" | "demo";
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export function useVoiceSession() {
@@ -24,6 +26,11 @@ export function useVoiceSession() {
   const [transcript, setTranscript] = useState("");
   const [responseText, setResponseText] = useState("");
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [connectionStatus, setConnectionStatus] =
+    useState<ConnectionStatus>("unknown");
+  const [notice, setNotice] = useState(
+    "Connect the backend to transcribe spoken words.",
+  );
 
   const startSession = useCallback(async () => {
     setError(null);
@@ -47,13 +54,20 @@ export function useVoiceSession() {
       const data = (await response.json()) as StartSessionResponse;
       sessionIdRef.current = data.sessionId;
       setIsDemoMode(false);
+      setConnectionStatus("connected");
+      setNotice("Backend connected. Record a turn to transcribe speech.");
       setState("idle");
     } catch (sessionError) {
       const fallback = createDemoSession();
       sessionIdRef.current = fallback.sessionId;
       setIsDemoMode(true);
+      setConnectionStatus("demo");
+      setNotice(
+        "Backend not connected. The browser can record audio, but real transcription needs the FastAPI backend.",
+      );
+      setTranscript("Waiting for a connected backend to transcribe your words.");
       setResponseText(
-        "Demo mode is active because the backend API is not deployed for this Vercel project.",
+        "Deploy apps/backend and set VITE_API_BASE_URL in Vercel to enable real speech-to-text.",
       );
       setState("idle");
     }
@@ -123,6 +137,9 @@ export function useVoiceSession() {
           const data = (await response.json()) as VoiceTurnResponse;
           setTranscript(data.transcript);
           setResponseText(data.responseText);
+          setIsDemoMode(false);
+          setConnectionStatus("connected");
+          setNotice("Speech was sent to the backend and transcribed.");
 
           if (data.audioUrl) {
             new Audio(data.audioUrl).play().catch(() => undefined);
@@ -131,6 +148,11 @@ export function useVoiceSession() {
           setState("idle");
         } catch (turnError) {
           const data = createDemoTurn(audioBlob.size);
+          setIsDemoMode(true);
+          setConnectionStatus("demo");
+          setNotice(
+            "Audio was captured locally, but no backend answered the transcription request.",
+          );
           setTranscript(data.transcript);
           setResponseText(data.responseText);
           setState("idle");
@@ -156,6 +178,8 @@ export function useVoiceSession() {
     transcript,
     responseText,
     isDemoMode,
+    connectionStatus,
+    notice,
     startSession,
     recordTurn,
     stopRecording,
@@ -194,9 +218,9 @@ function createDemoTurn(audioBytes: number): VoiceTurnResponse {
   return {
     transcript:
       audioBytes > 0
-        ? "Demo transcript: audio was recorded in the browser."
-        : "",
+        ? "Audio captured successfully. Real words are not available until the backend is connected."
+        : "No audio was captured. Check microphone permission and try again.",
     responseText:
-      "Demo response: connect a deployed backend by setting VITE_API_BASE_URL, or deploy the repo root with Vercel Services.",
+      "Next step: deploy apps/backend, then add VITE_API_BASE_URL=https://your-backend-url.com/api in the Vercel frontend environment.",
   };
 }
