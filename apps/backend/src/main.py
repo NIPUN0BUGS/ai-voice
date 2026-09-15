@@ -60,6 +60,7 @@ asr_model = None
 
 @app.get("/")
 @app.get("/api")
+@app.get("/api/index")
 def root():
     return {
         "service": "voice-ai-backend",
