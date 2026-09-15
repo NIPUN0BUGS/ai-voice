@@ -7,6 +7,7 @@ export function App() {
     error,
     transcript,
     responseText,
+    isDemoMode,
     startSession,
     recordTurn,
     stopRecording,
@@ -25,6 +26,7 @@ export function App() {
         <div className="status-row">
           <span className={`status-dot status-${state}`} />
           <span>{state}</span>
+          {isDemoMode ? <span className="mode-pill">demo</span> : null}
         </div>
 
         <div className="actions">

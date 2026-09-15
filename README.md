@@ -113,9 +113,13 @@ Frontend: Vercel project rooted at apps/web
 Backend: Render/Railway/Fly/VPS project rooted at apps/backend
 Frontend env: VITE_API_BASE_URL=https://your-backend-domain/api
 Backend env: FRONTEND_ORIGIN=https://your-frontend-domain
+Backend env: ASR_PROVIDER=faster-whisper
+Backend env: ASR_MODEL_SIZE=tiny
 ```
 
 This keeps the UI fast on Vercel and leaves the backend free to move to Docker/GPU infrastructure when real local ASR/TTS models are added.
+
+The first real ASR adapter uses Faster Whisper locally. It is not a third-party AI API; the backend downloads/runs the model itself. Use `ASR_MODEL_SIZE=tiny` for low-cost CPU hosting, then move to `base`, `small`, or a GPU host after the pipeline is stable.
 
 The Vercel backend is intentionally lightweight. Real local AI model serving with large model files or GPU dependencies should run on dedicated container/GPU infrastructure and be called through the existing model-client port.
 

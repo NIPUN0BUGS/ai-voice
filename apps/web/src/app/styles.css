@@ -86,6 +86,16 @@ h2 {
   gap: 10px;
 }
 
+.mode-pill {
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 999px;
+  color: #8a4b00;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
 .status-dot {
   border-radius: 999px;
   display: inline-block;

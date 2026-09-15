@@ -23,6 +23,7 @@ export function useVoiceSession() {
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState("");
   const [responseText, setResponseText] = useState("");
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const startSession = useCallback(async () => {
     setError(null);
@@ -45,10 +46,12 @@ export function useVoiceSession() {
 
       const data = (await response.json()) as StartSessionResponse;
       sessionIdRef.current = data.sessionId;
+      setIsDemoMode(false);
       setState("idle");
     } catch (sessionError) {
       const fallback = createDemoSession();
       sessionIdRef.current = fallback.sessionId;
+      setIsDemoMode(true);
       setResponseText(
         "Demo mode is active because the backend API is not deployed for this Vercel project.",
       );
@@ -152,6 +155,7 @@ export function useVoiceSession() {
     error,
     transcript,
     responseText,
+    isDemoMode,
     startSession,
     recordTurn,
     stopRecording,

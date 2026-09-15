@@ -5,6 +5,7 @@ import base64
 import math
 import os
 import struct
+import tempfile
 import wave
 
 from fastapi import FastAPI, HTTPException
@@ -54,6 +55,7 @@ audio_dir = Path(os.getenv("AUDIO_STORAGE_PATH", "/tmp/voice-audio"))
 app.mount("/api/audio", StaticFiles(directory=audio_dir, check_dir=False), name="audio")
 
 sessions: dict[str, datetime] = {}
+asr_model = None
 
 
 @app.get("/")
@@ -163,8 +165,38 @@ def transcribe_audio(audio: bytes) -> str:
     if len(audio) < 128:
         return ""
 
-    # Replace this adapter with Faster Whisper, wav2vec2, or your trained ASR model.
-    return "hello"
+    if os.getenv("ASR_PROVIDER", "mock") != "faster-whisper":
+        return "hello"
+
+    model = get_asr_model()
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as audio_file:
+        audio_file.write(audio)
+        audio_path = audio_file.name
+
+    try:
+        segments, _info = model.transcribe(audio_path, beam_size=1)
+        transcript = " ".join(segment.text.strip() for segment in segments)
+        return transcript.strip()
+    finally:
+        try:
+            os.remove(audio_path)
+        except OSError:
+            pass
+
+
+def get_asr_model():
+    global asr_model
+
+    if asr_model is None:
+        from faster_whisper import WhisperModel
+
+        asr_model = WhisperModel(
+            os.getenv("ASR_MODEL_SIZE", "tiny"),
+            device=os.getenv("ASR_DEVICE", "cpu"),
+            compute_type=os.getenv("ASR_COMPUTE_TYPE", "int8"),
+        )
+
+    return asr_model
 
 
 def create_response(transcript: str) -> str:
