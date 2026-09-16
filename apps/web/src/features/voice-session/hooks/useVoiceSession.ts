@@ -128,7 +128,9 @@ export function useVoiceSession() {
           setNotice("Speech was sent to the backend and transcribed.");
 
           if (data.audioUrl) {
-            new Audio(data.audioUrl).play().catch(() => undefined);
+            new Audio(resolveBackendUrl(data.audioUrl))
+              .play()
+              .catch(() => undefined);
           }
 
           setState("idle");
@@ -174,6 +176,22 @@ export function useVoiceSession() {
 
 function normalizeApiBaseUrl(value: string | undefined): string {
   return (value?.trim() || "/api").replace(/\/+$/, "");
+}
+
+function resolveBackendUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    return pathOrUrl;
+  }
+
+  if (!pathOrUrl.startsWith("/")) {
+    return pathOrUrl;
+  }
+
+  if (apiBaseUrl.startsWith("/")) {
+    return pathOrUrl;
+  }
+
+  return new URL(pathOrUrl, apiBaseUrl).toString();
 }
 
 async function requestJson<TResponse>(
