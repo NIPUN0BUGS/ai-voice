@@ -8,10 +8,13 @@ import struct
 import tempfile
 import wave
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
+
+load_dotenv()
 
 
 class ApiModel(BaseModel):
