@@ -67,6 +67,8 @@ After deploy, test:
 https://your-backend-vercel-url.vercel.app/api/health
 ```
 
+If that URL opens a Vercel login page or returns `401 Unauthorized` from a terminal, the backend is deployed but not publicly callable. Disable Vercel Deployment Protection for the backend project, then retest `/api/health` before wiring the URL into the frontend.
+
 The backend includes `api/index.py` and `api/[...path].py` so Vercel routes `/api/health`, `/api/voice-sessions`, and `/api/voice-turns` into the same FastAPI app.
 
 ## Railway

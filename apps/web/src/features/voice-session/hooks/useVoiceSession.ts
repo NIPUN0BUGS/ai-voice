@@ -202,6 +202,12 @@ async function requestJson<TResponse>(
   const contentType = response.headers.get("content-type") ?? "";
   const body = await response.text();
 
+  if (isVercelAuthenticationPage(response, contentType, body)) {
+    throw new Error(
+      "Backend is protected by Vercel Authentication. Disable Deployment Protection for the backend project, or use a public backend URL for VITE_API_BASE_URL.",
+    );
+  }
+
   if (!response.ok) {
     throw new Error(body || `Backend request failed with ${response.status}`);
   }
@@ -215,10 +221,25 @@ async function requestJson<TResponse>(
   return JSON.parse(body) as TResponse;
 }
 
+function isVercelAuthenticationPage(
+  response: Response,
+  contentType: string,
+  body: string,
+): boolean {
+  return (
+    response.status === 401 &&
+    contentType.includes("text/html") &&
+    (body.includes("vercel") || body.includes("/sso-api"))
+  );
+}
+
 function getBackendFallbackMessage(error: unknown): string {
   const message = toErrorMessage(error);
 
-  if (message.includes("did not return JSON")) {
+  if (
+    message.includes("did not return JSON") ||
+    message.includes("Vercel Authentication")
+  ) {
     return message;
   }
 
