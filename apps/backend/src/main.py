@@ -9,7 +9,7 @@ import tempfile
 import wave
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
@@ -68,10 +68,31 @@ asr_model = None
 @app.get("/api/index")
 def root():
     return {
+        "status": "ok",
         "service": "voice-ai-backend",
         "docs": "/docs",
         "health": "/api/health",
     }
+
+
+@app.post("/")
+@app.post("/api/index")
+async def vercel_stripped_path_dispatch(request: Request):
+    body = await read_json_body(request)
+
+    if "audioBase64" in body and "sessionId" in body:
+        return process_voice_turn(VoiceTurnRequest.model_validate(body))
+
+    if "text" in body and "sessionId" in body:
+        return synthesize(TextToSpeechRequest.model_validate(body))
+
+    if {"userId", "language", "consentAccepted"}.issubset(body):
+        return start_voice_session(StartVoiceSessionRequest.model_validate(body))
+
+    if "audioBase64" in body:
+        return transcribe(AudioRequest.model_validate(body))
+
+    raise HTTPException(status_code=400, detail="Unsupported backend request")
 
 
 @app.get("/health")
@@ -156,6 +177,18 @@ def decode_audio_base64(audio_base64: str) -> bytes:
         return base64.b64decode(audio_base64, validate=True)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Invalid base64 audio payload") from exc
+
+
+async def read_json_body(request: Request) -> dict:
+    try:
+        body = await request.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Request body must be valid JSON") from exc
+
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Request body must be a JSON object")
+
+    return body
 
 
 def has_speech(audio: bytes, audio_format: str) -> bool:
